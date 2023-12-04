@@ -107,7 +107,7 @@ function part2(input) {
 					break;
 				}
 			}
-			let pos = getGearNum(r, pointer, subPointer - 1, input);
+			let pos = getGearPosition(r, pointer, subPointer - 1, input);
 			if (pos !== null) {
 				record[pos[0]][pos[1]].push(Number(collectedString));
 			}
@@ -124,7 +124,7 @@ function part2(input) {
 	return sum;
 }
 
-function getGearNum(row, start, end, input) {
+function getGearPosition(row, start, end, input) {
 	if (row - 1 >= 0) {
 		for (let i = start - 1; i <= end + 1; i++) {
 			if (i >= 0 && i < input[row - 1].length && input[row - 1][i] === '*') {
