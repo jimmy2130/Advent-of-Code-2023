@@ -2,10 +2,68 @@ const fs = require('fs');
 
 function day18() {
 	const input = fs.readFileSync('./day18.txt').toString().split('\n');
+	const DIR = {
+		0: 'R',
+		1: 'D',
+		2: 'L',
+		3: 'U',
+	};
 	console.log('part 1');
 	console.log(part1(input));
 	console.log('part 2');
 	console.log(part2(input));
+	console.log('part 1 Retry');
+	console.log(
+		formula(
+			input.map(line => {
+				let [dir, steps] = line.split(' ');
+				steps = Number(steps);
+				return { dir, steps };
+			}),
+		),
+	);
+	console.log('part 2 Retry');
+	console.log(
+		formula(
+			input.map(line => {
+				const hexCode = line.split(/ \(#|\)/)[1];
+				const steps = parseInt(hexCode.slice(0, 5), 16);
+				const dir = DIR[hexCode[5]];
+				return { steps, dir };
+			}),
+		),
+	);
+}
+
+function formula(input) {
+	const points = [[0, 0]];
+	let [pointerX, pointerY] = [0, 0];
+	let b = 0;
+
+	for (let i = 0; i < input.length; i++) {
+		const { dir, steps } = input[i];
+		if (dir === 'R') {
+			pointerX += steps;
+		} else if (dir === 'L') {
+			pointerX -= steps;
+		} else if (dir === 'U') {
+			pointerY += steps;
+		} else if (dir === 'D') {
+			pointerY -= steps;
+		}
+		b += steps;
+		points.push([pointerX, pointerY]);
+	}
+
+	let A = 0;
+	for (let i = 0; i < points.length - 1; i++) {
+		const [y1, x1] = points[i];
+		const [y2, x2] = points[i + 1];
+		A += x1 * y2;
+		A -= y1 * x2;
+	}
+	A /= 2;
+	return A + 1 + b / 2;
 }
 
 function drawMap(input, size) {
@@ -163,13 +221,10 @@ function part2(input) {
 	});
 	// step 1: get vertical and horizontal ruler
 	const [hRuler, vRuler] = getRuler(newInput);
-	console.log({ hRuler, vRuler });
 	// step 2: get horizontal bar map
 	const hBarMap = getHBarMap(hRuler, vRuler, newInput);
-	console.log({ hBarMap });
 	// step 3: get map of inside block
 	const blockMap = getBlockMap(hBarMap);
-	console.log({ blockMap });
 	// step 4: calculate Ans
 	return calculateAns(hRuler, vRuler, blockMap);
 }
