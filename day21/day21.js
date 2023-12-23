@@ -1,10 +1,10 @@
 const fs = require('fs');
-const REMAINING_STEPS = 6;
+const REMAINING_STEPS = 8;
 const REMAINING_STEPS2 = 26501365;
 
 function day21() {
 	const input = fs
-		.readFileSync('./day21.txt')
+		.readFileSync('./test3.txt')
 		.toString()
 		.split('\n')
 		.map(row => row.split(''));
@@ -13,10 +13,12 @@ function day21() {
 	console.log(part1(input, [startingRow, startingCol]));
 	// console.log('part 2');
 	// console.log(part2(input, [startingRow, startingCol], 6));
-	console.log('part 2 Retry');
-	console.log(part2Retry(input, [startingRow, startingCol]));
-	console.log('part 2 Retry Retry');
-	console.log(part2RetryRetry(input, [startingRow, startingCol]));
+	// console.log('part 2 Retry');
+	// console.log(part2Retry(input, [startingRow, startingCol]));
+	// console.log('part 2 Retry Retry');
+	// console.log(part2RetryRetry(input, [startingRow, startingCol]));
+	console.log('part 2 Retry Retry Retry');
+	console.log(part2RetryRetryRetry(input, [startingRow, startingCol]));
 }
 
 function findStartingPosition(map) {
@@ -36,7 +38,7 @@ function part1(input, [startingRow, startingCol]) {
 		for (let c = 0; c < rangeMap[r].length; c++) {
 			if (
 				rangeMap[r][c] <= REMAINING_STEPS &&
-				rangeMap[r][c] % 2 === 0 &&
+				rangeMap[r][c] % 2 === REMAINING_STEPS % 2 &&
 				input[r][c] !== '#'
 			) {
 				ans += 1;
@@ -341,3 +343,187 @@ function calculateAns(map, rangeMap, [r, c], maxValue) {
 
 	return ans;
 }
+
+function part2RetryRetryRetry(initialMap, [startingRow, startingCol]) {
+	const input = JSON.parse(JSON.stringify(initialMap));
+	fillInHoles(input);
+
+	const TEST_STEPS = 25;
+	let ans = 0;
+	for (let q = 1; q <= 4; q++) {
+		const quadrantMap = getQuadrantMap(input, [startingRow, startingCol], q);
+		// console.log(quadrantMap.map(row => row.join('')).join('\n'));
+		// console.log('\n\n\n\n\n\n');
+		let rangeMap = getRangeMap(quadrantMap, findStartingPosition(quadrantMap));
+		rangeMap = trim(rangeMap, q);
+
+		// console.log(
+		// 	rangeMap
+		// 		.map(row => row.map(el => el.toString().padStart(2, '0')).join(','))
+		// 		.join('\n'),
+		// );
+
+		for (let r = 0; r < rangeMap.length; r++) {
+			for (let c = 0; c < rangeMap.length; c++) {
+				if (quadrantMap[r][c] === '#') {
+					continue;
+				}
+				ans += calculateQuadrantAns(rangeMap[r][c], input.length, TEST_STEPS);
+
+				if (
+					(q === 1 && c === 0) ||
+					(q === 2 && r === rangeMap.length - 1) ||
+					(q === 3 && c === rangeMap.length - 1) ||
+					(q === 4 && r === 0)
+				) {
+					ans -= calculateAxisAns(rangeMap[r][c], input.length, TEST_STEPS);
+				}
+			}
+		}
+	}
+
+	return ans;
+}
+
+function getQuadrantMap(input, [startingRow, startingCol], quadrant) {
+	let map = Array(input.length)
+		.fill(null)
+		.map(r => Array(input[0].length).fill(''));
+
+	let markerR = startingRow;
+	let markerC = startingCol;
+
+	if (quadrant === 1) {
+		for (let r = map.length - 1; r >= 0; r--) {
+			for (let c = 0; c < map.length; c++) {
+				map[r][c] =
+					input[(markerR + map.length * map.length) % map.length][
+						(markerC + map.length * map.length) % map.length
+					];
+				markerC += 1;
+			}
+			markerR -= 1;
+		}
+	} else if (quadrant === 2) {
+		for (let r = map.length - 1; r >= 0; r--) {
+			for (let c = map.length - 1; c >= 0; c--) {
+				map[r][c] =
+					input[(markerR + map.length * map.length) % map.length][
+						(markerC + map.length * map.length) % map.length
+					];
+				markerC -= 1;
+			}
+			markerR -= 1;
+		}
+	} else if (quadrant === 3) {
+		for (let r = 0; r < map.length; r++) {
+			for (let c = map.length - 1; c >= 0; c--) {
+				map[r][c] =
+					input[(markerR + map.length * map.length) % map.length][
+						(markerC + map.length * map.length) % map.length
+					];
+				markerC -= 1;
+			}
+			markerR += 1;
+		}
+	} else if (quadrant === 4) {
+		for (let r = 0; r < map.length; r++) {
+			for (let c = 0; c < map.length; c++) {
+				map[r][c] =
+					input[(markerR + map.length * map.length) % map.length][
+						(markerC + map.length * map.length) % map.length
+					];
+				markerC += 1;
+			}
+			markerR += 1;
+		}
+	}
+
+	if (quadrant === 1) {
+		return [
+			Array(input.length + 1).fill('.'),
+			...map.map(row => [...row, '.']),
+		];
+	}
+	if (quadrant === 2) {
+		return [
+			Array(input.length + 1).fill('.'),
+			...map.map(row => ['.', ...row]),
+		];
+	}
+	if (quadrant === 3) {
+		return [
+			...map.map(row => ['.', ...row]),
+			Array(input.length + 1).fill('.'),
+		];
+	}
+	if (quadrant === 4) {
+		return [
+			...map.map(row => [...row, '.']),
+			Array(input.length + 1).fill('.'),
+		];
+	}
+}
+
+function calculateQuadrantAns(initialNum, size, target) {
+	const distance = target - initialNum;
+	if (distance < 0) {
+		return 0;
+	}
+	const N = (distance - (distance % size)) / size + 1;
+	if (initialNum % 2 === target % 2) {
+		const lastTerm = N % 2 === 0 ? N - 1 : N;
+		const howManyTerms = (lastTerm - 1) / 2 + 1;
+		return ((1 + lastTerm) * howManyTerms) / 2;
+		// 1 + 3 + 5 + ....
+	} else {
+		const lastTerm = N % 2 === 0 ? N : N - 1;
+		const howManyTerms = (lastTerm - 2) / 2 + 1;
+		return ((2 + lastTerm) * howManyTerms) / 2;
+		// 2 + 4 + 6 + ...
+	}
+}
+
+function calculateAxisAns(initialNum, size, target) {
+	const distance = target - initialNum;
+	if (distance < 0) {
+		return 0;
+	}
+	const N = (distance - (distance % size)) / size + 1;
+	if (N % 2 === 0) {
+		return N / 2;
+	}
+	return initialNum % 2 === target % 2 ? Math.ceil(N / 2) : Math.floor(N / 2);
+}
+
+function fillInHoles(input) {
+	for (let r = 1; r < input.length - 1; r++) {
+		for (let c = 1; c < input[r].length - 1; c++) {
+			if (
+				input[r + 1][c] === '#' &&
+				input[r - 1][c] === '#' &&
+				input[r][c + 1] === '#' &&
+				input[r][c - 1] === '#'
+			) {
+				input[r][c] = '#';
+			}
+		}
+	}
+}
+
+function trim(rangeMap, quadrant) {
+	if (quadrant === 1) {
+		return rangeMap.slice(1).map(row => row.slice(0, -1));
+	}
+	if (quadrant === 2) {
+		return rangeMap.slice(1).map(row => row.slice(1));
+	}
+	if (quadrant === 3) {
+		return rangeMap.slice(0, -1).map(row => row.slice(1));
+	}
+	if (quadrant === 4) {
+		return rangeMap.slice(0, -1).map(row => row.slice(0, -1));
+	}
+}
+
+day21();
