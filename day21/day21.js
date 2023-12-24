@@ -4,21 +4,23 @@ const REMAINING_STEPS2 = 26501365;
 
 function day21() {
 	const input = fs
-		.readFileSync('./test3.txt')
+		.readFileSync('./day21.txt')
 		.toString()
 		.split('\n')
 		.map(row => row.split(''));
 	const [startingRow, startingCol] = findStartingPosition(input);
-	console.log('part 1');
-	console.log(part1(input, [startingRow, startingCol]));
+	// console.log('part 1');
+	// console.log(part1(input, [startingRow, startingCol]));
 	// console.log('part 2');
 	// console.log(part2(input, [startingRow, startingCol], 6));
 	// console.log('part 2 Retry');
 	// console.log(part2Retry(input, [startingRow, startingCol]));
 	// console.log('part 2 Retry Retry');
 	// console.log(part2RetryRetry(input, [startingRow, startingCol]));
-	console.log('part 2 Retry Retry Retry');
-	console.log(part2RetryRetryRetry(input, [startingRow, startingCol]));
+	// console.log('part 2 Retry Retry Retry');
+	// console.log(part2RetryRetryRetry(input, [startingRow, startingCol]));
+	console.log('part 2 polynomial');
+	console.log(part2Polynomial(input, [startingRow, startingCol]));
 }
 
 function findStartingPosition(map) {
@@ -31,14 +33,14 @@ function findStartingPosition(map) {
 	}
 }
 
-function part1(input, [startingRow, startingCol]) {
+function part1(input, [startingRow, startingCol], steps = 64) {
 	const rangeMap = getRangeMap(input, [startingRow, startingCol]);
 	let ans = 0;
 	for (let r = 0; r < rangeMap.length; r++) {
 		for (let c = 0; c < rangeMap[r].length; c++) {
 			if (
-				rangeMap[r][c] <= REMAINING_STEPS &&
-				rangeMap[r][c] % 2 === REMAINING_STEPS % 2 &&
+				rangeMap[r][c] <= steps &&
+				rangeMap[r][c] % 2 === steps % 2 &&
 				input[r][c] !== '#'
 			) {
 				ans += 1;
@@ -524,6 +526,50 @@ function trim(rangeMap, quadrant) {
 	if (quadrant === 4) {
 		return rangeMap.slice(0, -1).map(row => row.slice(0, -1));
 	}
+}
+
+function part2Polynomial(input, [startingRow, startingCol]) {
+	const bigMap = Array(input.length * 7)
+		.fill(null)
+		.map(row => Array(input.length * 7).fill(''));
+
+	for (let bigR = 0; bigR < bigMap.length; bigR += input.length) {
+		for (let bigC = 0; bigC < bigMap.length; bigC += input.length) {
+			for (let r = 0; r < input.length; r++) {
+				for (let c = 0; c < input.length; c++) {
+					bigMap[bigR + r][bigC + c] = input[r][c] === 'S' ? '.' : input[r][c];
+				}
+			}
+		}
+	}
+	// console.log(bigMap.map(row => row.join('')).join('\n'));
+	const mid = Math.floor(bigMap.length / 2);
+	// console.log(mid);
+
+	let ans1 = part1(bigMap, [mid, mid], 65);
+	let ans2 = part1(bigMap, [mid, mid], 65 + 131);
+	let ans3 = part1(bigMap, [mid, mid], 65 + 131 * 2);
+	console.log({ ans1, ans2, ans3 });
+
+	for (let i = 0; i < 202300 - 2; i++) {
+		let future = fromDay9([ans1, ans2, ans3]);
+		[ans1, ans2, ans3] = [ans2, ans3, future];
+	}
+	return ans3;
+	// console.log(fromDay9([ans1, ans2, ans3]));
+}
+
+function fromDay9(history) {
+	if (history.every(value => value === 0)) {
+		return 0;
+	}
+
+	let sequence = [];
+	for (let i = 1; i < history.length; i++) {
+		sequence.push(history[i] - history[i - 1]);
+	}
+
+	return history.at(-1) + fromDay9(sequence);
 }
 
 day21();
