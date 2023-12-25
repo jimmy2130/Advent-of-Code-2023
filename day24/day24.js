@@ -15,6 +15,8 @@ function day24() {
 	console.log(part1(input, REAL_LOW, REAL_HIGH));
 	console.log('part 2');
 	console.log(part2(input));
+	console.log('test');
+	console.log(test(input));
 }
 
 function part1(input, lowBound, highBound) {
@@ -69,6 +71,35 @@ function part2(input) {
 	const ansz = paz - ta * vz;
 
 	return ansx + ansy + ansz;
+}
+
+function test(input) {
+	let ans = -1;
+	for (let i = 0; i < input.length; i++) {
+		const [px, py, pz, vx, vy, vz] = input[i];
+		// guess the answer
+		const v = vx + vy + vz;
+		const p = px + py + pz;
+
+		// check if the answer is correct
+		let pass = true;
+		for (let j = 0; j < input.length; j++) {
+			if (i === j) {
+				continue;
+			}
+			const [px1, py1, pz1, vx1, vy1, vz1] = input[j];
+			const time = (p - (px1 + py1 + pz1)) / (vx1 + vy1 + vz1 - v);
+			if (time < 0 || !Number.isInteger(time)) {
+				pass = false;
+				break;
+			}
+		}
+		if (pass) {
+			ans = p;
+		}
+	}
+
+	return ans;
 }
 
 day24();
